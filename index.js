@@ -1,6 +1,11 @@
 const redux = require('redux');
 const createStore = redux.createStore;
 const bindActionCreators = redux.bindActionCreators;
+const combinedReducers = redux.combineReducers;
+const reduxLogger = require('redux-logger');
+const applyMiddleware = redux.applyMiddleware;
+const logger = reduxLogger.createLogger()
+
 console.log("Hello Redux from index.js");
 
 //Action types
@@ -41,15 +46,25 @@ function restockIcecream(qty = 1) {
     }
 }
 
-//initial state
-const initialState = {
+//initial state combined
+// const initialState = {
+//     numOfCakes: 10,
+//     numOfIcecreams: 6,
+// }
+
+//Separate States for each
+const initialCakeState = {
     numOfCakes: 10,
+}
+
+const initialIceCreamState = {
     numOfIcecreams: 6,
 }
 
+
 // Reducers
 // (previousState, action) => newState
-const reducer = (state = initialState, action) => {
+const CakeReducer = (state = initialCakeState, action) => {
     switch(action.type) {
         case CAKE_ORDERED:
             return {
@@ -61,6 +76,13 @@ const reducer = (state = initialState, action) => {
                 ...state, 
                 numOfCakes: state.numOfCakes + action.payload,
             }
+        default:
+            return state
+    }
+}
+
+const IceCreamReducer = (state = initialIceCreamState, action) => {
+    switch(action.type){
         case ICECREAM_ORDERED: 
             return {
                 ...state,
@@ -76,12 +98,17 @@ const reducer = (state = initialState, action) => {
     }
 }
 
+const rootReducer = combinedReducers({
+    cake: CakeReducer,
+    iceCream: IceCreamReducer,
+})
+
 //Store
-const store = createStore(reducer);
+const store = createStore(rootReducer, applyMiddleware(logger));
 console.log('Initial state', store.getState());
 
 //Listener for the store which listens when any store update takes place.
-const unSubscribe = store.subscribe(() => console.log('Update state', store.getState()))
+// const unSubscribe = store.subscribe(() => console.log('Update state', store.getState()))
 // store.dispatch(orderCake())
 // store.dispatch(orderCake())
 // store.dispatch(orderCake())
@@ -96,7 +123,7 @@ actions.orderIcecream();
 actions.restockIcecream(4);
 //To unsubscribe the changes in the store.
 //Any dispatch after the unsubscribe will not run.
-unSubscribe();
+// unSubscribe();
 
 // store.dispatch(orderCake())
 //This will not run.
